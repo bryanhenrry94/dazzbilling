@@ -7,212 +7,227 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Tabla de empresas (multi-tenant)
-model Company {
-  id                   String  @id @default(uuid())
-  userId               String // Usuario propietario
-  ruc                  String  @unique // RUC de la empresa
-  razonSocial          String // Razón social
-  nombreComercial      String? // Nombre comercial
-  direccion            String
-  telefono             String?
-  email                String
-  obligadoContabilidad Boolean @default(false)
-  agenteRetencion      Boolean @default(false)
+// Tablas Generales
+model Empresa {
+  id               String   @id @default(uuid())
+  user_id          String
+  ruc              String   @unique
+  razon_social     String
+  nombre_comercial String?
+  direccion        String
+  telefono         String?
+  email            String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  clientes           Cliente[]
+  productos          Producto[]
+  facturas           Factura[]
+  cuentas_contables  CuentaContable[]
+  asientos_contables AsientoContable[]
+  Usuario            Usuario[]
+  Almacen            Almacen[]
 
-  // Relaciones
-  clientes          Cliente[]
-  productos         Producto[]
-  facturas          Factura[]
-  cuentasContables  CuentaContable[]
-  asientosContables AsientoContable[]
-
-  @@index([userId])
+  @@index([user_id])
+  @@map("gen_empresa")
 }
 
-// Tabla de clientes
+model Usuario {
+  id         String  @id @default(uuid())
+  empresa_id String
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  nombre     String
+  email      String  @unique
+  password   String
+  rol        Rol
+  activo     Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([empresa_id])
+  @@map("gen_usuario")
+}
+
+enum Rol {
+  ADMIN
+  CONTADOR
+  VENTAS
+  INVENTARIO
+}
+
+// Clientes y CXC
 model Cliente {
-  id        String  @id @default(uuid())
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id                  String  @id @default(uuid())
+  empresa_id          String
+  empresa             Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  tipo_identificacion String
+  identificacion      String
+  razon_social        String
+  nombre_comercial    String?
+  direccion           String?
+  telefono            String?
+  email               String?
 
-  tipoIdentificacion String // RUC, Cédula, Pasaporte, Consumidor Final
-  identificacion     String
-  razonSocial        String
-  nombreComercial    String?
-  direccion          String?
-  telefono           String?
-  email              String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
   facturas Factura[]
 
-  @@unique([companyId, identificacion])
-  @@index([companyId])
+  @@unique([empresa_id, identificacion])
+  @@index([empresa_id])
+  @@map("cxc_cliente")
 }
 
-// Tabla de productos/servicios
+// Productos e Inventario
 model Producto {
-  id        String  @id @default(uuid())
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-
+  id          String  @id @default(uuid())
+  empresa_id  String
+  empresa     Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
   codigo      String
   nombre      String
   descripcion String?
   precio      Float
-  iva         Boolean @default(true) // Si aplica IVA (12%)
-  ice         Boolean @default(false) // Si aplica ICE
+  stock       Float   @default(0)
+  iva         Boolean @default(true)
+  ice         Boolean @default(false)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  factura_detalle FacturaDetalle[]
+  Inventario      Inventario[]
 
-  // Relaciones
-  detallesFactura DetalleFactura[]
-
-  @@unique([companyId, codigo])
-  @@index([companyId])
+  @@unique([empresa_id, codigo])
+  @@index([empresa_id])
+  @@map("inv_producto")
 }
 
-// Tabla de facturas
+model Almacen {
+  id         String  @id @default(uuid())
+  empresa_id String
+  empresa    Empresa @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  nombre     String
+  direccion  String?
+
+  productos Inventario[]
+
+  @@map("inv_almacen")
+}
+
+model Inventario {
+  id          String   @id @default(uuid())
+  producto_id String
+  producto    Producto @relation(fields: [producto_id], references: [id])
+  almacen_id  String
+  almacen     Almacen  @relation(fields: [almacen_id], references: [id])
+  cantidad    Float    @default(0)
+
+  @@index([producto_id])
+  @@index([almacen_id])
+  @@map("inv_inventario")
+}
+
+// Facturación y Ventas
 model Factura {
-  id        String  @id @default(uuid())
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  clienteId String
-  cliente   Cliente @relation(fields: [clienteId], references: [id])
+  id                     String        @id @default(uuid())
+  empresa_id             String
+  empresa                Empresa       @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  cliente_id             String
+  cliente                Cliente       @relation(fields: [cliente_id], references: [id])
+  numero_factura         String
+  clave_acceso           String?       @unique
+  fecha_emision          DateTime      @default(now())
+  subtotal               Float
+  descuento              Float         @default(0)
+  subtotal_sin_impuestos Float
+  iva                    Float
+  ice                    Float         @default(0)
+  total                  Float
+  estado                 EstadoFactura @default(BORRADOR)
+  observaciones          String?
 
-  // Información de la factura
-  numeroFactura String // Número secuencial
-  claveAcceso   String?  @unique // Clave de acceso de 49 dígitos
-  fechaEmision  DateTime @default(now())
+  detalles         FacturaDetalle[]
+  asiento_contable AsientoContable?
 
-  // Totales
-  subtotal             Float
-  descuento            Float @default(0)
-  subtotalSinImpuestos Float
-  iva                  Float
-  ice                  Float @default(0)
-  total                Float
-
-  // Estado
-  estado EstadoFactura @default(BORRADOR)
-
-  // Observaciones
-  observaciones String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
-  detalles        DetalleFactura[]
-  asientoContable AsientoContable?
-
-  @@unique([companyId, numeroFactura])
-  @@index([companyId])
-  @@index([clienteId])
-  @@index([fechaEmision])
+  @@unique([empresa_id, numero_factura])
+  @@index([empresa_id])
+  @@index([cliente_id])
+  @@index([fecha_emision])
+  @@map("ven_factura")
 }
 
-// Tabla de detalles de factura
-model DetalleFactura {
-  id         String   @id @default(uuid())
-  facturaId  String
-  factura    Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
-  productoId String
-  producto   Producto @relation(fields: [productoId], references: [id])
+model FacturaDetalle {
+  id              String   @id @default(uuid())
+  factura_id      String
+  factura         Factura  @relation(fields: [factura_id], references: [id], onDelete: Cascade)
+  producto_id     String
+  producto        Producto @relation(fields: [producto_id], references: [id])
+  cantidad        Float
+  precio_unitario Float
+  descuento       Float    @default(0)
+  subtotal        Float
+  iva             Float
+  ice             Float    @default(0)
+  total           Float
 
-  cantidad       Float
-  precioUnitario Float
-  descuento      Float @default(0)
-  subtotal       Float
-  iva            Float
-  ice            Float @default(0)
-  total          Float
-
-  @@index([facturaId])
-  @@index([productoId])
+  @@index([factura_id])
+  @@index([producto_id])
+  @@map("ven_factura_detalle")
 }
 
-// Tabla de cuentas contables (Plan de cuentas)
+// Contabilidad y Plan de Cuentas
 model CuentaContable {
-  id        String  @id @default(uuid())
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id                String           @id @default(uuid())
+  empresa_id        String
+  empresa           Empresa          @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  codigo            String
+  nombre            String
+  tipo_cuenta       TipoCuenta
+  nivel             Int
+  cuenta_padre_id   String?
+  cuenta_padre      CuentaContable?  @relation("CuentasHijas", fields: [cuenta_padre_id], references: [id])
+  cuentas_hijas     CuentaContable[] @relation("CuentasHijas")
+  acepta_movimiento Boolean          @default(true)
+  activa            Boolean          @default(true)
 
-  codigo        String // Ej: 1.1.01.01
-  nombre        String // Ej: Caja General
-  tipoCuenta    TipoCuenta // ACTIVO, PASIVO, PATRIMONIO, INGRESO, GASTO
-  nivel         Int // Nivel en el árbol de cuentas (1, 2, 3, 4)
-  cuentaPadreId String? // Referencia a cuenta padre
-  cuentaPadre   CuentaContable?  @relation("CuentasHijas", fields: [cuentaPadreId], references: [id])
-  cuentasHijas  CuentaContable[] @relation("CuentasHijas")
+  detalles_asiento DetalleAsiento[]
 
-  aceptaMovimiento Boolean @default(true) // Si acepta movimientos directos
-  activa           Boolean @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
-  detallesAsiento DetalleAsiento[]
-
-  @@unique([companyId, codigo])
-  @@index([companyId])
-  @@index([tipoCuenta])
+  @@unique([empresa_id, codigo])
+  @@index([empresa_id])
+  @@index([tipo_cuenta])
+  @@map("con_cuenta")
 }
 
-// Tabla de asientos contables
 model AsientoContable {
-  id        String  @id @default(uuid())
-  companyId String
-  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid())
+  empresa_id   String
+  empresa      Empresa       @relation(fields: [empresa_id], references: [id], onDelete: Cascade)
+  numero       String
+  fecha        DateTime      @default(now())
+  descripcion  String
+  tipo_asiento TipoAsiento   @default(MANUAL)
+  factura_id   String?       @unique
+  factura      Factura?      @relation(fields: [factura_id], references: [id])
+  estado       EstadoAsiento @default(BORRADOR)
 
-  numero      String // Número secuencial del asiento
-  fecha       DateTime    @default(now())
-  descripcion String
-  tipoAsiento TipoAsiento @default(MANUAL) // MANUAL, AUTOMATICO
-
-  // Referencia opcional a documento origen
-  facturaId String?  @unique
-  factura   Factura? @relation(fields: [facturaId], references: [id])
-
-  estado EstadoAsiento @default(BORRADOR)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relaciones
   detalles DetalleAsiento[]
 
-  @@unique([companyId, numero])
-  @@index([companyId])
+  @@unique([empresa_id, numero])
+  @@index([empresa_id])
   @@index([fecha])
+  @@map("con_asiento")
 }
 
-// Tabla de detalles de asiento (movimientos)
 model DetalleAsiento {
-  id        String          @id @default(uuid())
-  asientoId String
-  asiento   AsientoContable @relation(fields: [asientoId], references: [id], onDelete: Cascade)
-  cuentaId  String
-  cuenta    CuentaContable  @relation(fields: [cuentaId], references: [id])
-
+  id          String          @id @default(uuid())
+  asiento_id  String
+  asiento     AsientoContable @relation(fields: [asiento_id], references: [id], onDelete: Cascade)
+  cuenta_id   String
+  cuenta      CuentaContable  @relation(fields: [cuenta_id], references: [id])
   descripcion String?
-  debe        Float   @default(0)
-  haber       Float   @default(0)
+  debe        Float           @default(0)
+  haber       Float           @default(0)
 
-  @@index([asientoId])
-  @@index([cuentaId])
+  @@index([asiento_id])
+  @@index([cuenta_id])
+  @@map("con_asiento_detalle")
 }
 
-// Enums para contabilidad
 enum TipoCuenta {
   ACTIVO
   PASIVO
@@ -232,7 +247,6 @@ enum EstadoAsiento {
   ANULADO
 }
 
-// Enum para estado de factura
 enum EstadoFactura {
   BORRADOR
   EMITIDA

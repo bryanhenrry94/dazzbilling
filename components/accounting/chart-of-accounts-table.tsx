@@ -1,23 +1,30 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2 } from "lucide-react"
-import { deleteCuentaContable } from "@/app/actions/accounting"
-import { useRouter } from "next/navigation"
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Pencil, Trash2 } from "lucide-react";
+import { deleteCuentaContable } from "@/app/actions/accounting";
+import { useRouter } from "next/navigation";
 
 type CuentaContable = {
-  id: string
-  codigo: string
-  nombre: string
-  tipoCuenta: string
-  nivel: number
-  aceptaMovimiento: boolean
-  activa: boolean
-  cuentaPadre: { codigo: string; nombre: string } | null
-}
+  id: string;
+  codigo: string;
+  nombre: string;
+  tipo_cuenta: string;
+  nivel: number;
+  acepta_movimiento: boolean;
+  activa: boolean;
+  cuenta_padre: { codigo: string; nombre: string } | null;
+};
 
 const tipoCuentaColors = {
   ACTIVO: "bg-green-100 text-green-800",
@@ -25,25 +32,25 @@ const tipoCuentaColors = {
   PATRIMONIO: "bg-blue-100 text-blue-800",
   INGRESO: "bg-purple-100 text-purple-800",
   GASTO: "bg-orange-100 text-orange-800",
-}
+};
 
 export function CuentasTable({ cuentas }: { cuentas: CuentaContable[] }) {
-  const router = useRouter()
-  const [loading, setLoading] = useState<string | null>(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Está seguro de eliminar esta cuenta?")) return
+    if (!confirm("¿Está seguro de eliminar esta cuenta?")) return;
 
-    setLoading(id)
-    const result = await deleteCuentaContable(id)
-    setLoading(null)
+    setLoading(id);
+    const result = await deleteCuentaContable(id);
+    setLoading(null);
 
     if (!result.success) {
-      alert(result.error)
+      alert(result.error);
     } else {
-      router.refresh()
+      router.refresh();
     }
-  }
+  };
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
@@ -69,35 +76,55 @@ export function CuentasTable({ cuentas }: { cuentas: CuentaContable[] }) {
           ) : (
             cuentas.map((cuenta) => (
               <TableRow key={cuenta.id}>
-                <TableCell className="font-mono font-medium">{cuenta.codigo}</TableCell>
-                <TableCell style={{ paddingLeft: `${cuenta.nivel * 12}px` }}>{cuenta.nombre}</TableCell>
+                <TableCell className="font-mono font-medium">
+                  {cuenta.codigo}
+                </TableCell>
+                <TableCell style={{ paddingLeft: `${cuenta.nivel * 12}px` }}>
+                  {cuenta.nombre}
+                </TableCell>
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={tipoCuentaColors[cuenta.tipoCuenta as keyof typeof tipoCuentaColors]}
+                    className={
+                      tipoCuentaColors[
+                        cuenta.tipo_cuenta as keyof typeof tipoCuentaColors
+                      ]
+                    }
                   >
-                    {cuenta.tipoCuenta}
+                    {cuenta.tipo_cuenta}
                   </Badge>
                 </TableCell>
                 <TableCell>{cuenta.nivel}</TableCell>
                 <TableCell>
-                  {cuenta.aceptaMovimiento ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  {cuenta.acepta_movimiento ? (
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-800"
+                    >
                       Sí
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="bg-slate-100 text-slate-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-slate-100 text-slate-800"
+                    >
                       No
                     </Badge>
                   )}
                 </TableCell>
                 <TableCell>
                   {cuenta.activa ? (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-800"
+                    >
                       Activa
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="bg-red-100 text-red-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-red-100 text-red-800"
+                    >
                       Inactiva
                     </Badge>
                   )}
@@ -123,5 +150,5 @@ export function CuentasTable({ cuentas }: { cuentas: CuentaContable[] }) {
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

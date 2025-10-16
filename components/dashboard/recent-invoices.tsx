@@ -1,14 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import type { Factura, Cliente } from "@prisma/client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import type { Factura, Cliente } from "@prisma/client";
 
 type FacturaConCliente = Factura & {
-  cliente: Cliente
-}
+  cliente: Cliente;
+};
 
 interface RecentInvoicesProps {
-  facturas: FacturaConCliente[]
+  facturas: FacturaConCliente[];
 }
 
 export function RecentInvoices({ facturas }: RecentInvoicesProps) {
@@ -16,30 +16,33 @@ export function RecentInvoices({ facturas }: RecentInvoicesProps) {
     return new Intl.NumberFormat("es-EC", {
       style: "currency",
       currency: "USD",
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("es-EC", {
       month: "short",
       day: "numeric",
-    }).format(new Date(date))
-  }
+    }).format(new Date(date));
+  };
 
   const getEstadoBadge = (estado: string) => {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+    const variants: Record<
+      string,
+      "default" | "secondary" | "destructive" | "outline"
+    > = {
       BORRADOR: "secondary",
       EMITIDA: "default",
       AUTORIZADA: "default",
       ANULADA: "destructive",
-    }
+    };
 
     return (
       <Badge variant={variants[estado] || "outline"} className="text-xs">
         {estado}
       </Badge>
-    )
-  }
+    );
+  };
 
   return (
     <Card>
@@ -48,7 +51,9 @@ export function RecentInvoices({ facturas }: RecentInvoicesProps) {
       </CardHeader>
       <CardContent>
         {facturas.length === 0 ? (
-          <p className="text-center text-slate-500 py-8">No hay facturas registradas</p>
+          <p className="text-center text-slate-500 py-8">
+            No hay facturas registradas
+          </p>
         ) : (
           <div className="space-y-4">
             {facturas.map((factura) => (
@@ -59,14 +64,22 @@ export function RecentInvoices({ facturas }: RecentInvoicesProps) {
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-slate-900">#{factura.numeroFactura}</p>
+                    <p className="font-medium text-slate-900">
+                      #{factura.numero_factura}
+                    </p>
                     {getEstadoBadge(factura.estado)}
                   </div>
-                  <p className="text-sm text-slate-600">{factura.cliente.razonSocial}</p>
+                  <p className="text-sm text-slate-600">
+                    {factura.cliente.razon_social}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-slate-900">{formatPrice(factura.total)}</p>
-                  <p className="text-sm text-slate-500">{formatDate(factura.fechaEmision)}</p>
+                  <p className="font-medium text-slate-900">
+                    {formatPrice(factura.total)}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {formatDate(factura.fecha_emision)}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -74,5 +87,5 @@ export function RecentInvoices({ facturas }: RecentInvoicesProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

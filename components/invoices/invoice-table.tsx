@@ -22,7 +22,7 @@ import { deleteFactura, emitirFactura } from "@/app/actions/invoices";
 import type {
   Factura,
   Cliente,
-  DetalleFactura,
+  FacturaDetalle,
   Producto,
 } from "@prisma/client";
 import {
@@ -39,7 +39,7 @@ import Link from "next/link";
 
 type FacturaConRelaciones = Factura & {
   cliente: Cliente;
-  detalles: (DetalleFactura & { producto: Producto })[];
+  detalles: (FacturaDetalle & { producto: Producto })[];
 };
 
 interface FacturasTableProps {
@@ -117,10 +117,10 @@ export function FacturasTable({ facturas }: FacturasTableProps) {
               facturas.map((factura) => (
                 <TableRow key={factura.id}>
                   <TableCell className="font-medium">
-                    {factura.numeroFactura}
+                    {factura.numero_factura}
                   </TableCell>
-                  <TableCell>{factura.cliente.razonSocial}</TableCell>
-                  <TableCell>{formatDate(factura.fechaEmision)}</TableCell>
+                  <TableCell>{factura.cliente.razon_social}</TableCell>
+                  <TableCell>{formatDate(factura.fecha_emision)}</TableCell>
                   <TableCell className="font-medium">
                     {formatPrice(factura.total)}
                   </TableCell>

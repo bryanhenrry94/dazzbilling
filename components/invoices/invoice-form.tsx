@@ -146,7 +146,7 @@ export function FacturaForm({ clientes, productos }: FacturaFormProps) {
               <SelectContent>
                 {clientes.map((cliente) => (
                   <SelectItem key={cliente.id} value={cliente.id}>
-                    {cliente.razonSocial} - {cliente.identificacion}
+                    {cliente.razon_social} - {cliente.identificacion}
                   </SelectItem>
                 ))}
               </SelectContent>

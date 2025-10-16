@@ -1,84 +1,84 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { productoSchema } from "@/lib/validations/producto"
-import { revalidatePath } from "next/cache"
-import { getCompanyId } from "./customers"
+import { prisma } from "@/lib/prisma";
+import { productoSchema } from "@/lib/validations/producto";
+import { revalidatePath } from "next/cache";
+import { getCompanyId } from "./customers";
 
 export async function getProductos() {
   try {
-    const companyId = await getCompanyId()
+    const empresa_id = await getCompanyId();
 
     const productos = await prisma.producto.findMany({
-      where: { companyId },
-      orderBy: { createdAt: "desc" },
-    })
+      where: { empresa_id },
+      // orderBy: { created_at: "desc" },
+    });
 
-    return { success: true, data: productos }
+    return { success: true, data: productos };
   } catch (error) {
-    console.error("[v0] Error al obtener productos:", error)
-    return { success: false, error: "Error al obtener productos" }
+    console.error("[v0] Error al obtener productos:", error);
+    return { success: false, error: "Error al obtener productos" };
   }
 }
 
 export async function createProducto(data: unknown) {
   try {
-    const companyId = await getCompanyId()
+    const empresa_id = await getCompanyId();
 
-    const validated = productoSchema.parse(data)
+    const validated = productoSchema.parse(data);
 
     const producto = await prisma.producto.create({
       data: {
         ...validated,
-        companyId,
+        empresa_id,
       },
-    })
+    });
 
-    revalidatePath("/dashboard/productos")
-    return { success: true, data: producto }
+    revalidatePath("/dashboard/productos");
+    return { success: true, data: producto };
   } catch (error) {
-    console.error("[v0] Error al crear producto:", error)
+    console.error("[v0] Error al crear producto:", error);
     if (error instanceof Error) {
-      return { success: false, error: error.message }
+      return { success: false, error: error.message };
     }
-    return { success: false, error: "Error al crear producto" }
+    return { success: false, error: "Error al crear producto" };
   }
 }
 
 export async function updateProducto(id: string, data: unknown) {
   try {
-    const companyId = await getCompanyId()
+    const empresa_id = await getCompanyId();
 
-    const validated = productoSchema.parse(data)
+    const validated = productoSchema.parse(data);
 
     const producto = await prisma.producto.update({
-      where: { id, companyId },
+      where: { id, empresa_id },
       data: validated,
-    })
+    });
 
-    revalidatePath("/dashboard/productos")
-    return { success: true, data: producto }
+    revalidatePath("/dashboard/productos");
+    return { success: true, data: producto };
   } catch (error) {
-    console.error("[v0] Error al actualizar producto:", error)
+    console.error("[v0] Error al actualizar producto:", error);
     if (error instanceof Error) {
-      return { success: false, error: error.message }
+      return { success: false, error: error.message };
     }
-    return { success: false, error: "Error al actualizar producto" }
+    return { success: false, error: "Error al actualizar producto" };
   }
 }
 
 export async function deleteProducto(id: string) {
   try {
-    const companyId = await getCompanyId()
+    const empresa_id = await getCompanyId();
 
     await prisma.producto.delete({
-      where: { id, companyId },
-    })
+      where: { id, empresa_id },
+    });
 
-    revalidatePath("/dashboard/productos")
-    return { success: true }
+    revalidatePath("/dashboard/productos");
+    return { success: true };
   } catch (error) {
-    console.error("[v0] Error al eliminar producto:", error)
-    return { success: false, error: "Error al eliminar producto" }
+    console.error("[v0] Error al eliminar producto:", error);
+    return { success: false, error: "Error al eliminar producto" };
   }
 }

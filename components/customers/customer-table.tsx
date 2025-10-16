@@ -1,13 +1,25 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
-import { ClienteForm } from "./customer-form"
-import { deleteCliente } from "@/app/actions/customers"
-import type { Cliente } from "@prisma/client"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ClienteForm } from "./customer-form";
+import { deleteCliente } from "@/app/actions/customers";
+import type { Cliente } from "@prisma/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,22 +29,22 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 interface ClientesTableProps {
-  clientes: Cliente[]
+  clientes: Cliente[];
 }
 
 export function ClientesTable({ clientes }: ClientesTableProps) {
-  const [editingCliente, setEditingCliente] = useState<Cliente | undefined>()
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [editingCliente, setEditingCliente] = useState<Cliente | undefined>();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleDelete = async () => {
-    if (!deletingId) return
-    await deleteCliente(deletingId)
-    setDeletingId(null)
-  }
+    if (!deletingId) return;
+    await deleteCliente(deletingId);
+    setDeletingId(null);
+  };
 
   return (
     <>
@@ -57,8 +69,10 @@ export function ClientesTable({ clientes }: ClientesTableProps) {
             ) : (
               clientes.map((cliente) => (
                 <TableRow key={cliente.id}>
-                  <TableCell className="font-medium">{cliente.identificacion}</TableCell>
-                  <TableCell>{cliente.razonSocial}</TableCell>
+                  <TableCell className="font-medium">
+                    {cliente.identificacion}
+                  </TableCell>
+                  <TableCell>{cliente.razon_social}</TableCell>
                   <TableCell>{cliente.email || "-"}</TableCell>
                   <TableCell>{cliente.telefono || "-"}</TableCell>
                   <TableCell>
@@ -71,14 +85,17 @@ export function ClientesTable({ clientes }: ClientesTableProps) {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
                           onClick={() => {
-                            setEditingCliente(cliente)
-                            setIsFormOpen(true)
+                            setEditingCliente(cliente);
+                            setIsFormOpen(true);
                           }}
                         >
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeletingId(cliente.id)} className="text-red-600">
+                        <DropdownMenuItem
+                          onClick={() => setDeletingId(cliente.id)}
+                          className="text-red-600"
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Eliminar
                         </DropdownMenuItem>
@@ -95,8 +112,8 @@ export function ClientesTable({ clientes }: ClientesTableProps) {
       <ClienteForm
         open={isFormOpen}
         onOpenChange={(open) => {
-          setIsFormOpen(open)
-          if (!open) setEditingCliente(undefined)
+          setIsFormOpen(open);
+          if (!open) setEditingCliente(undefined);
         }}
         cliente={editingCliente}
       />
@@ -106,15 +123,18 @@ export function ClientesTable({ clientes }: ClientesTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El cliente será eliminado permanentemente.
+              Esta acción no se puede deshacer. El cliente será eliminado
+              permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Eliminar</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>
+              Eliminar
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

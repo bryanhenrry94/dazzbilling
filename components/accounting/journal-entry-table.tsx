@@ -1,64 +1,71 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Eye, CheckCircle, XCircle } from "lucide-react"
-import { contabilizarAsiento, anularAsiento } from "@/app/actions/accounting"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Eye, CheckCircle, XCircle } from "lucide-react";
+import { contabilizarAsiento, anularAsiento } from "@/app/actions/accounting";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type AsientoContable = {
-  id: string
-  numero: string
-  fecha: Date
-  descripcion: string
-  tipoAsiento: string
-  estado: string
+  id: string;
+  numero: string;
+  fecha: Date;
+  descripcion: string;
+  tipo_asiento: string;
+  estado: string;
   detalles: Array<{
-    debe: number
-    haber: number
-  }>
-}
+    debe: number;
+    haber: number;
+  }>;
+};
 
 const estadoColors = {
   BORRADOR: "bg-yellow-100 text-yellow-800",
   CONTABILIZADO: "bg-green-100 text-green-800",
   ANULADO: "bg-red-100 text-red-800",
-}
+};
 
 export function AsientosTable({ asientos }: { asientos: AsientoContable[] }) {
-  const router = useRouter()
-  const [loading, setLoading] = useState<string | null>(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState<string | null>(null);
 
   const handleContabilizar = async (id: string) => {
-    if (!confirm("¿Está seguro de contabilizar este asiento?")) return
+    if (!confirm("¿Está seguro de contabilizar este asiento?")) return;
 
-    setLoading(id)
-    const result = await contabilizarAsiento(id)
-    setLoading(null)
+    setLoading(id);
+    const result = await contabilizarAsiento(id);
+    setLoading(null);
 
     if (!result.success) {
-      alert(result.error)
+      alert(result.error);
     } else {
-      router.refresh()
+      router.refresh();
     }
-  }
+  };
 
   const handleAnular = async (id: string) => {
-    if (!confirm("¿Está seguro de anular este asiento?")) return
+    if (!confirm("¿Está seguro de anular este asiento?")) return;
 
-    setLoading(id)
-    const result = await anularAsiento(id)
-    setLoading(null)
+    setLoading(id);
+    const result = await anularAsiento(id);
+    setLoading(null);
 
     if (!result.success) {
-      alert(result.error)
+      alert(result.error);
     } else {
-      router.refresh()
+      router.refresh();
     }
-  }
+  };
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
@@ -84,28 +91,53 @@ export function AsientosTable({ asientos }: { asientos: AsientoContable[] }) {
             </TableRow>
           ) : (
             asientos.map((asiento) => {
-              const totalDebe = asiento.detalles.reduce((sum, d) => sum + d.debe, 0)
-              const totalHaber = asiento.detalles.reduce((sum, d) => sum + d.haber, 0)
+              const totalDebe = asiento.detalles.reduce(
+                (sum, d) => sum + d.debe,
+                0
+              );
+              const totalHaber = asiento.detalles.reduce(
+                (sum, d) => sum + d.haber,
+                0
+              );
 
               return (
                 <TableRow key={asiento.id}>
-                  <TableCell className="font-mono font-medium">{asiento.numero}</TableCell>
-                  <TableCell>{new Date(asiento.fecha).toLocaleDateString("es-EC")}</TableCell>
-                  <TableCell className="max-w-xs truncate">{asiento.descripcion}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{asiento.tipoAsiento}</Badge>
+                  <TableCell className="font-mono font-medium">
+                    {asiento.numero}
                   </TableCell>
-                  <TableCell className="text-right font-medium">${totalDebe.toFixed(2)}</TableCell>
-                  <TableCell className="text-right font-medium">${totalHaber.toFixed(2)}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary" className={estadoColors[asiento.estado as keyof typeof estadoColors]}>
+                    {new Date(asiento.fecha).toLocaleDateString("es-EC")}
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate">
+                    {asiento.descripcion}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{asiento.tipo_asiento}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    ${totalDebe.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-right font-medium">
+                    ${totalHaber.toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        estadoColors[
+                          asiento.estado as keyof typeof estadoColors
+                        ]
+                      }
+                    >
                       {asiento.estado}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" asChild>
-                        <Link href={`/dashboard/contabilidad/asientos/${asiento.id}`}>
+                        <Link
+                          href={`/dashboard/contabilidad/asientos/${asiento.id}`}
+                        >
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
@@ -132,11 +164,11 @@ export function AsientosTable({ asientos }: { asientos: AsientoContable[] }) {
                     </div>
                   </TableCell>
                 </TableRow>
-              )
+              );
             })
           )}
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

@@ -1,36 +1,47 @@
-import { getFactura } from "@/app/actions/invoices"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
+import { getFactura } from "@/app/actions/invoices";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
-export default async function FacturaDetallePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const result = await getFactura(id)
+export default async function FacturaDetallePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const result = await getFactura(id);
 
   if (!result.success || !result.data) {
-    notFound()
+    notFound();
   }
 
-  const factura = result.data
+  const factura = result.data;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("es-EC", {
       style: "currency",
       currency: "USD",
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("es-EC", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    }).format(new Date(date))
-  }
+    }).format(new Date(date));
+  };
 
   return (
     <div className="space-y-6">
@@ -41,8 +52,10 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Factura #{factura.numeroFactura}</h1>
-          <p className="text-slate-600">{formatDate(factura.fechaEmision)}</p>
+          <h1 className="text-3xl font-bold text-slate-900">
+            Factura #{factura.numero_factura}
+          </h1>
+          <p className="text-slate-600">{formatDate(factura.fecha_emision)}</p>
         </div>
         <Badge className="ml-auto">{factura.estado}</Badge>
       </div>
@@ -55,15 +68,15 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
           <CardContent className="space-y-2">
             <div>
               <p className="text-sm text-slate-600">RUC</p>
-              <p className="font-medium">{factura.company.ruc}</p>
+              <p className="font-medium">{factura.empresa.ruc}</p>
             </div>
             <div>
               <p className="text-sm text-slate-600">Razón Social</p>
-              <p className="font-medium">{factura.company.razonSocial}</p>
+              <p className="font-medium">{factura.empresa.razon_social}</p>
             </div>
             <div>
               <p className="text-sm text-slate-600">Dirección</p>
-              <p className="font-medium">{factura.company.direccion}</p>
+              <p className="font-medium">{factura.empresa.direccion}</p>
             </div>
           </CardContent>
         </Card>
@@ -79,7 +92,7 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
             </div>
             <div>
               <p className="text-sm text-slate-600">Razón Social</p>
-              <p className="font-medium">{factura.cliente.razonSocial}</p>
+              <p className="font-medium">{factura.cliente.razon_social}</p>
             </div>
             {factura.cliente.direccion && (
               <div>
@@ -114,16 +127,32 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
                   <TableRow key={detalle.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{detalle.producto.nombre}</div>
-                        <div className="text-sm text-slate-500">{detalle.producto.codigo}</div>
+                        <div className="font-medium">
+                          {detalle.producto.nombre}
+                        </div>
+                        <div className="text-sm text-slate-500">
+                          {detalle.producto.codigo}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">{detalle.cantidad}</TableCell>
-                    <TableCell className="text-right">{formatPrice(detalle.precioUnitario)}</TableCell>
-                    <TableCell className="text-right">{formatPrice(detalle.descuento)}</TableCell>
-                    <TableCell className="text-right">{formatPrice(detalle.subtotal)}</TableCell>
-                    <TableCell className="text-right">{formatPrice(detalle.iva)}</TableCell>
-                    <TableCell className="text-right font-medium">{formatPrice(detalle.total)}</TableCell>
+                    <TableCell className="text-right">
+                      {detalle.cantidad}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatPrice(detalle.precio_unitario)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatPrice(detalle.descuento)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatPrice(detalle.subtotal)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatPrice(detalle.iva)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatPrice(detalle.total)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -134,15 +163,21 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
             <div className="w-80 space-y-2">
               <div className="flex justify-between">
                 <span className="text-slate-600">Subtotal:</span>
-                <span className="font-medium">{formatPrice(factura.subtotal)}</span>
+                <span className="font-medium">
+                  {formatPrice(factura.subtotal)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Descuento:</span>
-                <span className="font-medium">{formatPrice(factura.descuento)}</span>
+                <span className="font-medium">
+                  {formatPrice(factura.descuento)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">Subtotal sin impuestos:</span>
-                <span className="font-medium">{formatPrice(factura.subtotalSinImpuestos)}</span>
+                <span className="font-medium">
+                  {formatPrice(factura.subtotal_sin_impuestos)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-600">IVA (12%):</span>
@@ -151,7 +186,9 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
               {factura.ice > 0 && (
                 <div className="flex justify-between">
                   <span className="text-slate-600">ICE:</span>
-                  <span className="font-medium">{formatPrice(factura.ice)}</span>
+                  <span className="font-medium">
+                    {formatPrice(factura.ice)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between border-t border-slate-200 pt-2 text-lg font-bold">
@@ -163,12 +200,14 @@ export default async function FacturaDetallePage({ params }: { params: Promise<{
 
           {factura.observaciones && (
             <div className="mt-6 rounded-lg bg-slate-50 p-4">
-              <p className="text-sm font-medium text-slate-700">Observaciones:</p>
+              <p className="text-sm font-medium text-slate-700">
+                Observaciones:
+              </p>
               <p className="text-sm text-slate-600">{factura.observaciones}</p>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

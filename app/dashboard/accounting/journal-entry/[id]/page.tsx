@@ -77,7 +77,7 @@ export default async function AsientoDetallePage({ params }: any) {
           </div>
           <div className="flex gap-2">
             <span className="font-semibold text-slate-700">Tipo:</span>
-            <Badge variant="secondary">{asiento.tipoAsiento}</Badge>
+            <Badge variant="secondary">{asiento.tipo_asiento}</Badge>
           </div>
           {asiento.factura && (
             <div className="flex gap-2">
@@ -86,8 +86,8 @@ export default async function AsientoDetallePage({ params }: any) {
                 href={`/dashboard/facturas/${asiento.factura.id}`}
                 className="text-blue-600 hover:underline"
               >
-                #{asiento.factura.numeroFactura} -{" "}
-                {asiento.factura.cliente.razonSocial}
+                #{asiento.factura.numero_factura} -{" "}
+                {asiento.factura.cliente.razon_social}
               </Link>
             </div>
           )}
