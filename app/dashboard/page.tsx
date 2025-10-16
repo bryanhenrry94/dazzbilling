@@ -38,11 +38,11 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Panel</h1>
           <p className="text-slate-600">Resumen de tu negocio</p>
         </div>
         <Button asChild className="bg-slate-900 hover:bg-slate-800">
-          <Link href="/dashboard/facturas/nueva">
+          <Link href="/dashboard/invoices/new">
             <Plus className="mr-2 h-4 w-4" />
             Nueva Factura
           </Link>

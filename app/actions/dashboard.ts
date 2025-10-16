@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getCompanyId } from "./clientes"
+import { getCompanyId } from "./customers"
 
 export async function getDashboardStats() {
   try {
