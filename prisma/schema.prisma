@@ -1,0 +1,241 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabla de empresas (multi-tenant)
+model Company {
+  id                   String  @id @default(uuid())
+  userId               String // Usuario propietario
+  ruc                  String  @unique // RUC de la empresa
+  razonSocial          String // Razón social
+  nombreComercial      String? // Nombre comercial
+  direccion            String
+  telefono             String?
+  email                String
+  obligadoContabilidad Boolean @default(false)
+  agenteRetencion      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  clientes          Cliente[]
+  productos         Producto[]
+  facturas          Factura[]
+  cuentasContables  CuentaContable[]
+  asientosContables AsientoContable[]
+
+  @@index([userId])
+}
+
+// Tabla de clientes
+model Cliente {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  tipoIdentificacion String // RUC, Cédula, Pasaporte, Consumidor Final
+  identificacion     String
+  razonSocial        String
+  nombreComercial    String?
+  direccion          String?
+  telefono           String?
+  email              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  facturas Factura[]
+
+  @@unique([companyId, identificacion])
+  @@index([companyId])
+}
+
+// Tabla de productos/servicios
+model Producto {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  codigo      String
+  nombre      String
+  descripcion String?
+  precio      Float
+  iva         Boolean @default(true) // Si aplica IVA (12%)
+  ice         Boolean @default(false) // Si aplica ICE
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  detallesFactura DetalleFactura[]
+
+  @@unique([companyId, codigo])
+  @@index([companyId])
+}
+
+// Tabla de facturas
+model Factura {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  // Información de la factura
+  numeroFactura String // Número secuencial
+  claveAcceso   String?  @unique // Clave de acceso de 49 dígitos
+  fechaEmision  DateTime @default(now())
+
+  // Totales
+  subtotal             Float
+  descuento            Float @default(0)
+  subtotalSinImpuestos Float
+  iva                  Float
+  ice                  Float @default(0)
+  total                Float
+
+  // Estado
+  estado EstadoFactura @default(BORRADOR)
+
+  // Observaciones
+  observaciones String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  detalles        DetalleFactura[]
+  asientoContable AsientoContable?
+
+  @@unique([companyId, numeroFactura])
+  @@index([companyId])
+  @@index([clienteId])
+  @@index([fechaEmision])
+}
+
+// Tabla de detalles de factura
+model DetalleFactura {
+  id         String   @id @default(uuid())
+  facturaId  String
+  factura    Factura  @relation(fields: [facturaId], references: [id], onDelete: Cascade)
+  productoId String
+  producto   Producto @relation(fields: [productoId], references: [id])
+
+  cantidad       Float
+  precioUnitario Float
+  descuento      Float @default(0)
+  subtotal       Float
+  iva            Float
+  ice            Float @default(0)
+  total          Float
+
+  @@index([facturaId])
+  @@index([productoId])
+}
+
+// Tabla de cuentas contables (Plan de cuentas)
+model CuentaContable {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  codigo        String // Ej: 1.1.01.01
+  nombre        String // Ej: Caja General
+  tipoCuenta    TipoCuenta // ACTIVO, PASIVO, PATRIMONIO, INGRESO, GASTO
+  nivel         Int // Nivel en el árbol de cuentas (1, 2, 3, 4)
+  cuentaPadreId String? // Referencia a cuenta padre
+  cuentaPadre   CuentaContable?  @relation("CuentasHijas", fields: [cuentaPadreId], references: [id])
+  cuentasHijas  CuentaContable[] @relation("CuentasHijas")
+
+  aceptaMovimiento Boolean @default(true) // Si acepta movimientos directos
+  activa           Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  detallesAsiento DetalleAsiento[]
+
+  @@unique([companyId, codigo])
+  @@index([companyId])
+  @@index([tipoCuenta])
+}
+
+// Tabla de asientos contables
+model AsientoContable {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  numero      String // Número secuencial del asiento
+  fecha       DateTime    @default(now())
+  descripcion String
+  tipoAsiento TipoAsiento @default(MANUAL) // MANUAL, AUTOMATICO
+
+  // Referencia opcional a documento origen
+  facturaId String?  @unique
+  factura   Factura? @relation(fields: [facturaId], references: [id])
+
+  estado EstadoAsiento @default(BORRADOR)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  detalles DetalleAsiento[]
+
+  @@unique([companyId, numero])
+  @@index([companyId])
+  @@index([fecha])
+}
+
+// Tabla de detalles de asiento (movimientos)
+model DetalleAsiento {
+  id        String          @id @default(uuid())
+  asientoId String
+  asiento   AsientoContable @relation(fields: [asientoId], references: [id], onDelete: Cascade)
+  cuentaId  String
+  cuenta    CuentaContable  @relation(fields: [cuentaId], references: [id])
+
+  descripcion String?
+  debe        Float   @default(0)
+  haber       Float   @default(0)
+
+  @@index([asientoId])
+  @@index([cuentaId])
+}
+
+// Enums para contabilidad
+enum TipoCuenta {
+  ACTIVO
+  PASIVO
+  PATRIMONIO
+  INGRESO
+  GASTO
+}
+
+enum TipoAsiento {
+  MANUAL
+  AUTOMATICO
+}
+
+enum EstadoAsiento {
+  BORRADOR
+  CONTABILIZADO
+  ANULADO
+}
+
+// Enum para estado de factura
+enum EstadoFactura {
+  BORRADOR
+  EMITIDA
+  AUTORIZADA
+  ANULADA
+}
