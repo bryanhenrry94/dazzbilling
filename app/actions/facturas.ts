@@ -5,7 +5,7 @@ import { facturaSchema } from "@/lib/validations/factura"
 import { revalidatePath } from "next/cache"
 import { getCompanyId } from "./clientes"
 
-const IVA_RATE = 0.12 // 12% IVA en Ecuador
+const IVA_RATE = 0.15 // 15% IVA en Ecuador
 
 function calcularTotales(detalles: any[]) {
   let subtotal = 0
